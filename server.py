@@ -9,20 +9,19 @@ class Server:
 
     def __init__(self):
         try:
-            self.app = Flask(__name__)
+            self.app =Flask(__name__)
             self.collections = {}
-            print("Flask initialized successfully.")
+            print('Flask initialized successfully.')
         except:
-            print("Failed to initialize Flask. ")
-
+            print('                                      Failed to initialize Flask.')
         try:
-            app.config["MONGO_URI"] = "mongodb://aiegSimulatormockApp:Lo0RSpu5-dF5xsd@192.168.30.215:27037/aiegSimulatormock"
-            self.db = PyMongo(app).db
+            #self.app.config["MONGO_URI"] = "mongodb://aiegSimulatormockApp:Lo0RSpu5-dF5xsd@192.168.30.215:27037/aiegSimulatormock"
+            self.app.config["MONGO_URI"] = "mongodb://127.0.0.1:27017/testdb"
+            self.db = PyMongo(self.app).db
             self.collections = {}
-            print("Database successfully configured")
+            print('Database successfully configured.')
         except Exception as e:
-            print("Failed to configure MongoDB. Error message: " + str(e))
-
+            print('                                      Failed to configure MongoDB. Error message: ' + str(e))
 
 
     '''
@@ -32,10 +31,10 @@ class Server:
     # A customized 'jsonify' function that interfaces with the app to avoid the error of regular jsonify being unable to parse ObjectID type in MongoDB documents.
     # The function basically inherits the original jsonify function but uses 'dumps' instead.
     # DON'T CHANGE.
-    def jsonify(*args, **kwargs):
+    def jsonify(self, *args, **kwargs):
         indent = None
         separators = (',', ':')
-        if app.config['JSONIFY_PRETTYPRINT_REGULAR'] or app.debug:
+        if self.app.config['JSONIFY_PRETTYPRINT_REGULAR'] or self.app.debug:
             indent = 2
             separators = (', ', ': ')
         if args and kwargs:
@@ -45,17 +44,18 @@ class Server:
             data = args[0]
         else:
             data = args or kwargs
-        return app.response_class(
+        return self.app.response_class(
             dumps(data, indent=indent, separators=separators) + '\n',
-            mimetype=app.config['JSONIFY_MIMETYPE']
+            mimetype=self.app.config['JSONIFY_MIMETYPE']
         )
 
 
     def getCollection(self, coll: str):
         try:
             return self.db.get_collection(coll)
-        else:
+        except:
             print("ERROR: Can't locate target collection.")
+            return None
 
 
     '''
@@ -72,10 +72,10 @@ class Server:
                 coll.replace_one({'id':req['id']}, req)
             else:
                 coll.insert_one(req)
-            return jsonify({
+            return self.jsonify({
                 "code": 110400,
                 "message": "success",
-                "result": req
+                "result": coll.find_one({'id':req['id']})
             })
         except BaseException as e: return jsonError(e)
 
@@ -84,7 +84,7 @@ class Server:
         try:
             req = json.loads(request.get_data())
             coll = self.getCollection(req['collection'])
-            return jsonify({
+            return self.jsonify({
                 "code": 110400,
                 "message": "success",
                 "result": coll.find_one({'id': req['id']})
@@ -92,14 +92,40 @@ class Server:
         except Exception as e: return jsonError(e)
 
 
-    def getAndFilterDocument(self, request):
+    def getAllDocuments(self,request):
+        req = json.loads(request.get_data())
+        coll = self.getCollection(req['collection'])
         try:
-            req = json.loads(request.get_data())
-            coll = self.getCollection(req['collection'])
+            # Look through the collection and find all documents in the database, put them into a list.
+            result = []
+            for item in coll.find():
+                result.append(item)
             return jsonify({
                 "code": 110400,
                 "message": "success",
-                "result": coll.find_one({'id': req['id']})
+                "result": result
+            })
+        except Exception as e: return jsonError(e)
+
+    def getAndFilterDocument(self, request):
+        try:
+            li = []
+            req = json.loads(request.get_data())
+            coll = self.getCollection(req['collection'])
+            try:
+                name = req['name']
+            except:
+                return jsonify({
+                    "code": 110402,
+                    "message": "Your request does not contain 'name' key."
+                })
+            for this in coll.find():
+                if 'name' in this and this['name'].find(name) != -1:
+                    li.append(this)
+            return jsonify({
+                "code": 110400,
+                "message": "success",
+                "result": li
             })
         except Exception as e: return jsonError(e)
 
