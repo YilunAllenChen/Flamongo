@@ -177,7 +177,7 @@ class Server:
                     li.append(this)
             return self.success(li)
         except Exception as e: return jsonError(e)
-
+ 
     '''
     POST
     {
@@ -194,8 +194,8 @@ class Server:
                 listNotFound = []
                 for thisId in ids:
                     query = {'id':thisId}
-                    if(coll.find({'id':thisId}).count()):
-                        coll.remove({'id':thisId})
+                    if(coll.find(query).count()):
+                        coll.remove(query)
                         listDeleted.append(thisId)
                     else:
                         listNotFound.append(thisId)

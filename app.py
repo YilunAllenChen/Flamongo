@@ -12,7 +12,6 @@ flask = Server()
                                     Collection Layer
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
-
 # MongoDB doesn't allow creation of an empty collection. So when you write a document, its corresponding collectino is automatically generated.
 
 # Drop a collection with all documents inside it.
@@ -23,8 +22,6 @@ def dropCollection(): return flask.dropCollection(request) if request.method == 
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
                                     Document Layer
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-
-
 
 # Write a document, or replace an existing one.
 @flask.app.route('/write_document/', methods=['POST'])
@@ -46,12 +43,9 @@ def getAndFilter(): return flask.getAndFilterDocument(request) if request.method
 @flask.app.route('/delete_document/', methods=['POST'])
 def delete(): return flask.deleteDocuments(request) if request.method == "POST" else badRequestError()
 
-
-
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
                                     Key-Value Layer
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-
 
 # Get a value of a specific key of a document in a spcific collection.
 @flask.app.route('/get_value_by_key/', methods=['POST'])
