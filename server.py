@@ -11,6 +11,12 @@ class Server:
     def __init__(self):  
         try:
             self.app = Flask(__name__)
+
+
+            #For Local Testing Only
+            from flask_cors import CORS
+            CORS(self.app)
+
             print('Flask initialized successfully.')
         except:
             print('Failed to initialize Flask.')
@@ -92,7 +98,6 @@ class Server:
                 coll = self.db.get_collection(req['collection'])
             except Exception as e: print("ERROR: Can't locate target collection. " + str(e))
             return req, coll
-
         except Exception as e:
             print("Pre-Processing failed: " + str(e))
             return None, None
@@ -204,6 +209,7 @@ class Server:
             else:
                 query = {'id':req['id']}
                 #If id param is not a list.
+                print(req)
                 if(coll.find(query).count()):
                     coll.remove(query)
                     return self.success("target entry deleted successfully.")
@@ -239,10 +245,13 @@ class Server:
                 return self.success("Collection dropped successfully")
             except:
                 return noDataFoundError()
-        except Exception as e: return jsonError
+        except Exception as e: return jsonError(e)
 
-
-
+    def listCollections(self,request):
+        try:
+            coll_names = self.db.list_collection_names(session=None)
+            return self.success(coll_names)
+        except Exception as e: return jsonError(e)
 
 
 

@@ -8,6 +8,9 @@ from utils import badRequestError
 # Version: 0.1.0
 flask = Server()
 
+
+
+
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
                                     Collection Layer
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
@@ -17,6 +20,10 @@ flask = Server()
 # Drop a collection with all documents inside it.
 @flask.app.route('/drop_collection/', methods=['POST'])
 def dropCollection(): return flask.dropCollection(request) if request.method == "POST" else badRequestError()
+
+# List all visible collections 
+@flask.app.route('/list_collections/', methods=['POST'])
+def listCollection(): return flask.listCollections(request) if request.method == "POST" else badRequestError()
 
 
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
@@ -81,8 +88,8 @@ def getScenario(): return flask.getDocument(newRequest(request,{'collection':'sc
 @flask.app.route('/simulator/search_scenario', methods=['POST'])
 def searchScenario(): return flask.getAndFilterDocument(newRequest(request,{'collection':'scenarios'})) if request.method == "POST" else badRequestError()
 
-@flask.app.route('/simulator/get_all_scenario', methods=['POST'])
-def getAllScenarios(): return flask.getAllDocuments(newRequest(request,{'collection':'scenarios'})) if request.method == "POST" else badRequestError()
+@flask.app.route('/simulator/get_all_scenario', methods=['POST','GET'])
+def getAllScenarios(): return flask.getAllDocuments(newRequest(request,{'collection':'scenarios'}))
 
 @flask.app.route('/v1/aiengine/simulatormockserver/editor', methods=['POST'])
 def addTestCase(): return flask.writeDocument(newRequest(request,{'collection':'test_cases'})) if request.method == "POST" else badRequestError()
@@ -90,8 +97,8 @@ def addTestCase(): return flask.writeDocument(newRequest(request,{'collection':'
 @flask.app.route('/v1/aiengine/simulatormockserver/delete', methods=['POST'])
 def deleteTestCase(): return flask.deleteDocuments(newRequest(request,{'collection':'test_cases'})) if request.method == "POST" else badRequestError()
 
-@flask.app.route('/v1/aiengine/simulatormockserver/getall', methods=['POST'])
-def getAllTestCases(): return flask.getAllDocuments(newRequest(request,{'collection':'test_cases'})) if request.method == "POST" else badRequestError()
+@flask.app.route('/v1/aiengine/simulatormockserver/getall', methods=['POST', 'GET'])
+def getAllTestCases(): return flask.getAllDocuments(newRequest(request,{'collection':'test_cases'})) 
 
 @flask.app.route('/simulator/get_test_case', methods=['POST', 'GET'])
 def getTestCase(): return flask.getDocument(newRequest(request,{'collection':'test_cases'}))
@@ -113,8 +120,6 @@ def getHoliday(): return flask.getRawValueByKey(newRequest(request,{'collection'
 
 @flask.app.route('/getData/<dataType>', methods=['POST', 'GET'])
 def get_mock_data(dataType): return flask.getValueByKey(newRequest(request,{'key':dataType,'collection':'test_cases','id':flask.activeTestCase}))
-
-
 
 if __name__ == '__main__':
     flask.app.run(host='0.0.0.0', port=5000,debug=True)
