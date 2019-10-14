@@ -4,8 +4,7 @@ pipeline {
         stage('package') {
             agent {
         		docker {
-            		        image 'maven'
-            		        args '-v /root/.m2:/root/.m2  -v /data/maven/apache-maven-3.6.0/conf/settings.xml:/root/.m2/settings.xml --entrypoint='
+            		        image 'python'
         		}
     	    }
             steps {
