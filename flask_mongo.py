@@ -12,6 +12,7 @@ class Mongo:
             self.app.config["MONGO_URI"] = self.__initMongoConfig()
             self.db = PyMongo(app).db
             self.__testMongoConnection('_selfTest')
+            self.activeTestCase = -1
         except:
             print("Failed to initialize Flask_mongo")
 
@@ -223,7 +224,15 @@ class Mongo:
         id = req['id']
         if coll.find({'id': id}).count():
             try:
-                return self.success({dataType: coll.find_one({'id': id})[dataType]})
+                if type(dataType) == list:
+                    res = {}
+                    for thisType in dataType:
+                        res[thisType] = coll.find_one({'id': id})[thisType]
+                    return self.success(res)
+                elif type(dataType) == str:
+                    return self.success({dataType: coll.find_one({'id': id})[dataType]})
+                else:
+                    return ParamNotFoundError(dataType)
             except:
                 return noDataFoundError()
         # If no test case data is found that matches the id, return an error message.
@@ -243,10 +252,6 @@ class Mongo:
         # If no test case data is found that matches the id, return an error message.
         else:
             return noDataFoundError()
-
-
-
-
 
     def selectTestCase(self, request):
         try:

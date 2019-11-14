@@ -1,5 +1,6 @@
 flask
 pymongo
 flask_pymongo
-flask_cors
 kafka-python
+flask_CORS
+requests

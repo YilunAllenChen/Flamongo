@@ -1,14 +1,12 @@
 import json
 from flask_server import Server
 from flask import request
-from error_handling import badRequestError
+from error_handling import *
 from utils import *
 
 
 # Version: 0.1.0
 server = Server()
-
-
 
 
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
@@ -75,7 +73,7 @@ def getRawValueByKey(): return server.mongo.getRawValueByKey(request) if request
 def sendKafkaMessage(): return server.kafka.sendMessage(request) if request.method == "POST" else badRequestError()
 
 @server.app.route('/kafka/receive_message/',methods=['POST', 'GET'])
-def sendKafkaMessage(): return server.kafka.receiveMessages(request) if request.method == "POST" else badRequestError()
+def receiveKafkaMessage(): return server.kafka.receiveMessages(request) if request.method == "POST" else badRequestError()
 
 
 
@@ -86,7 +84,7 @@ def sendKafkaMessage(): return server.kafka.receiveMessages(request) if request.
 
 
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-                                    Legacy Functions
+                                    Legacy Functions Mapping
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 @server.app.route('/simulator/add_scenario/', methods=['POST'])
@@ -125,17 +123,31 @@ def searchTestCase(): return server.mongo.getAndFilterDocument(newRequest(reques
 @server.app.route('/v1/aiengine/simulatormockserver/select_test_case', methods=['POST'])
 def selectTestCase(): return server.mongo.selectTestCase(newRequest(request,{'collection':'test_cases'})) if request.method == "POST" else badRequestError()
 
-@server.app.route('/violation-web/1.0/violation/query', methods=['POST', 'GET'])
-def getTrafficRes(): return server.mongo.getRawValueByKey(newRequest(request,{'collection':'test_cases','id':server.activeTestCase,'key':'mockTrafficRes'})) 
-
-@server.app.route('/getTimeSlot', methods=['POST', 'GET'])
-def getTimeSlot(): return server.mongo.getRawValueByKey(newRequest(request,{'collection':'test_cases','id':server.activeTestCase,'key':'mockTimeSlot'})) 
-
-@server.app.route('/v1/cms/festival/attribute', methods=['POST', 'GET'])
-def getHoliday(): return server.mongo.getRawValueByKey(newRequest(request,{'collection':'test_cases','id':server.activeTestCase,'key':'mockHoliday'}))
-
 @server.app.route('/getData/<dataType>', methods=['POST', 'GET'])
 def get_mock_data(dataType): return server.mongo.getValueByKey(newRequest(request,{'key':dataType,'collection':'test_cases','id':server.activeTestCase}))
+
+@server.app.route('/<path:path>')
+def integrated_mock_apis(path):
+
+    mockAPIMap = {
+        'violation-web/1.0/violation/query':'mockTrafficRes',
+        'violation-web/1.0/violation/onQuery': 'mockTrafficRes',
+        'getTimeSlot': 'mockTimeSlot',
+        'v1/cms/festival/attribute': 'mockHoliday',
+        'v1/accouting/vehicle/internal/car/querybyvin': 'mauid',
+        'v1/chargingsearch':'mockCharging',
+        'simulator/get_violation':['hisViolationCount', 'newViolationCount'],
+        '/v1/accounting/record/list_by_condition_paging': 'purchaseDate',
+        '/v2/accouting/vehicle/internal/car/mavid': 'mavid'
+    }
+
+    if path not in mockAPIMap:
+        return pageNotFoundError(path)
+    else:
+        key = mockAPIMap[path]
+        return server.mongo.getValueByKey(newRequest(request,{'collection':'test_cases','id':server.mongo.activeTestCase,'key':key}))
+
+
 
 if __name__ == '__main__':
     server.app.run(host='0.0.0.0', port=5000,debug=True)
